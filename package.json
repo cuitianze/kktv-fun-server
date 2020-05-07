@@ -1,8 +1,8 @@
 {
   "name": "kktv-fun-server",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "看看TV的后端服务",
+  "author": "cuitianze123@gmail.com",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

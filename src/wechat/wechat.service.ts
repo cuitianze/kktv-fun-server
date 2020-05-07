@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpService } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { fmtNormalXML } from 'src/utils/wx';
+import { fmtNormalXML } from 'src/utils/fmtNormalXML';
+import { generateMsgXmlTemplate } from 'src/utils/generateMsgXmlTemplate';
 
 const TOKEN = 'kktv_fun_51huo';
 
@@ -13,12 +14,15 @@ const SHA1 = (str: string) => {
 
 @Injectable()
 export class WechatService {
+  constructor(private httpService: HttpService) {}
+
+  // 验证微信签名
   verifySign(query: {
     signature: any;
     nonce: any;
     timestamp: any;
     echostr: any;
-  }) {
+  }): boolean | string {
     const token = TOKEN;
     const { signature, nonce, timestamp, echostr } = query;
 
@@ -31,7 +35,33 @@ export class WechatService {
     }
   }
 
+  // 处理微信消息事件
   async handleReceiveEvent(body) {
+    /* MsgType 为 text时
+    {
+      xml: {
+        ToUserName: [ 'gh_4e4caf62ccfe' ],
+        FromUserName: [ 'o2wqAs_t5JpM7P6-qmXSr_DEjtqs' ],
+        CreateTime: [ '1588863231' ],
+        MsgType: [ 'text' ],
+        Content: [ '123' ],
+        MsgId: [ '22747052375433386' ]
+      }
+    }
+    */
+    /* MsgType 为 event时
+    {
+      xml: {
+        ToUserName: [ 'gh_4e4caf62ccfe' ],
+        FromUserName: [ 'o2wqAs_t5JpM7P6-qmXSr_DEjtqs' ],
+        CreateTime: [ '1588868068' ],
+        MsgType: [ 'event' ],
+        Event: [ 'unsubscribe' ],
+        EventKey: [ '' ]
+      }
+    }
+    */
+
     // 重点要看是怎么处理xml的
     const message = fmtNormalXML(body.xml);
 
@@ -42,8 +72,9 @@ export class WechatService {
     }: any = message;
     let { EventKey: eventKey }: any = message;
 
+    let resMessage: string; // 响应消息
+
     if (msgType === 'event') {
-      let resMessage;
       switch (msgEvent) {
         // 关注
         case 'subscribe':
@@ -82,8 +113,31 @@ export class WechatService {
       //     //             .hset(eventKey, 'openID', user.openid)
       //     //             .exec()
       // }
-
-      return resMessage;
     }
+
+    // 在公众号内发消息
+    if (msgType === 'text') {
+      const { Content: content }: any = message;
+      if (/^夸/.test(content)) {
+        const kuaRes = await this.httpService
+          .get('https://chp.shadiao.app/api.php')
+          .toPromise();
+        resMessage = `${kuaRes.data}`;
+      } else {
+        const res = await this.httpService
+          .get(
+            `http://api.qingyunke.com/api.php?key=free&appid=0&msg=${encodeURIComponent(
+              content,
+            )}`,
+          )
+          .toPromise();
+        const reply = res.data.content
+          .replace(/{br}/g, '\n')
+          .replace('菲菲', '小天');
+        resMessage = `${reply}`;
+      }
+    }
+
+    return generateMsgXmlTemplate(resMessage, message);
   }
 }

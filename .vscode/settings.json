@@ -4,6 +4,9 @@
         "echostr",
         "kktv",
         "nestjs",
-        "qrcode"
+        "openid",
+        "prebuild",
+        "qrcode",
+        "unionid"
     ]
 }

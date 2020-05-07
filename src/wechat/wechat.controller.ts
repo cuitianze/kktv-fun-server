@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Header } from '@nestjs/common';
 import { WechatService } from './wechat.service';
 
 @Controller('wechat')
@@ -15,15 +15,36 @@ export class WechatController {
   }
 
   @Post('event')
+  @Header('content-type', 'application/xml')
   async receiveEvent(@Query() query, @Body() body) {
+    /* body 的数据结构如下
+    {
+      xml: {
+        ToUserName: [ 'gh_4e4caf62ccfe' ],
+        FromUserName: [ 'o2wqAs_t5JpM7P6-qmXSr_DEjtqs' ],
+        CreateTime: [ '1588863231' ],
+        MsgType: [ 'text' ],
+        Content: [ '123' ],
+        MsgId: [ '22747052375433386' ]
+      }
+    }
+    */
     const signVerified = this.wechatService.verifySign(query);
     if (!signVerified) {
       return '未授权';
     }
 
     const resMessage = await this.wechatService.handleReceiveEvent(body);
-    console.log('%c 🎬 开发日志: WechatController -> receiveEvent -> resMessage ', 'font-size:16px;background-color:#bd117e;color:white;', resMessage);
+    /* resMessage 响应给微信的消息
+      <xml>
+        <ToUserName><![CDATA[o2wqAs_t5JpM7P6-qmXSr_DEjtqs]]></ToUserName>
+        <FromUserName><![CDATA[gh_4e4caf62ccfe]]></FromUserName>
+        <CreateTime>1588871222</CreateTime>
+        <MsgType><![CDATA[text]]></MsgType>
+        <Content><![CDATA[我也是]]></Content>
+      </xml>
+    */
 
-    return {};
+    return resMessage;
   }
 }
