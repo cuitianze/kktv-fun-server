@@ -47,4 +47,12 @@ export class WechatController {
 
     return resMessage;
   }
+
+  @Get('qrcode')
+  getWechatORCode(
+    @Query('userID') userId: string,
+    @Query('type') type: string,
+  ) {
+    const errno = 0;
+  }
 }

@@ -1,12 +1,16 @@
 {
     "cSpell.words": [
         "Wechat",
+        "appid",
+        "camelcase",
         "echostr",
         "kktv",
         "nestjs",
         "openid",
         "prebuild",
         "qrcode",
+        "qrscene",
+        "showqrcode",
         "unionid"
     ]
 }

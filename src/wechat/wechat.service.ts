@@ -2,8 +2,12 @@ import { Injectable, HttpService } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { fmtNormalXML } from 'src/utils/fmtNormalXML';
 import { generateMsgXmlTemplate } from 'src/utils/generateMsgXmlTemplate';
+import { createTimestamp } from 'src/utils/createTimestamp';
+import WechatApiService from 'src/utils/wechatApiService';
 
 const TOKEN = 'kktv_fun_51huo';
+
+const wechatServiceApiInstance = new WechatApiService({});
 
 const SHA1 = (str: string) => {
   return crypto
@@ -93,26 +97,31 @@ export class WechatService {
           break;
       }
 
-      // if (!!eventKey) {
-      //     // 有场景值（扫了我们生成的二维码）
-      //     let user = await MP.handle('getUserInfo', userId)
-      //     let userInfo = `${user.nickname}（${user.sex ? '男' : '女'}, ${user.province}${user.city}）`
-      //     if (eventKey.slice(0, 8) === 'qrscene_') {
-      //       // 扫码并关注
-      //       // 关注就创建帐号的话可以在这里把用户信息写入数据库完成用户注册
-      //       eventKey = eventKey.slice(8)
-      //       console.log(userInfo + '扫码并关注了公众号')
-      //     } else {
-      //       // 已关注
-      //       console.log(userInfo + '扫码进入了公众号')
-      //     }
+      // 如果有场景值，那就是扫了生成的二维码
+      if (!!eventKey) {
+        const user = await wechatServiceApiInstance.handle(
+          'getUserInfo',
+          userId,
+        );
+        const userInfo = `${user.nickname}（${user.sex ? '男' : '女'}, ${
+          user.province
+        }${user.city}）`;
+        if (eventKey.slice(0, 8) === 'qrscene_') {
+          // 扫码并关注
+          // 关注就创建帐号的话可以在这里把用户信息写入数据库完成用户注册
+          eventKey = eventKey.slice(8);
+          console.log(userInfo + '扫码并关注了公众号');
+        } else {
+          // 已关注
+          console.log(userInfo + '扫码进入了公众号');
+        }
 
-      //     // 更新扫码记录，供浏览器扫码状态轮询
-      //     // await redis.pipeline()
-      //     //             .hset(eventKey, 'unionID', user.unionid || '') // 仅unionid机制下有效
-      //     //             .hset(eventKey, 'openID', user.openid)
-      //     //             .exec()
-      // }
+        // 更新扫码记录，供浏览器扫码状态轮询
+        // await redis.pipeline()
+        //             .hset(eventKey, 'unionID', user.unionid || '') // 仅unionid机制下有效
+        //             .hset(eventKey, 'openID', user.openid)
+        //             .exec()
+      }
     }
 
     // 在公众号内发消息
@@ -139,5 +148,9 @@ export class WechatService {
     }
 
     return generateMsgXmlTemplate(resMessage, message);
+  }
+
+  async createQRCode() {
+    const id = createTimestamp();
   }
 }
