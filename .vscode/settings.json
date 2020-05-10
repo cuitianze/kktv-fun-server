@@ -2,8 +2,10 @@
     "cSpell.words": [
         "Wechat",
         "appid",
+        "appsecret",
         "camelcase",
         "echostr",
+        "hset",
         "kktv",
         "nestjs",
         "openid",

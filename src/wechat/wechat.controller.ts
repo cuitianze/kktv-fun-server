@@ -49,10 +49,7 @@ export class WechatController {
   }
 
   @Get('qrcode')
-  getWechatORCode(
-    @Query('userID') userId: string,
-    @Query('type') type: string,
-  ) {
-    const errno = 0;
+  getWechatORCode(@Query('type') type: string) {
+    return this.wechatService.createQRCode(type);
   }
 }
